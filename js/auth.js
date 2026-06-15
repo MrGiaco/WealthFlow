@@ -36,7 +36,7 @@ WF.Auth = (() => {
       pinHash: null,
       biometricEnabled: false,
       biometricCredentialId: null,
-      googleClientId: '',
+      googleClientId: '502758255664-o37r8ncm0g43thvbpu36qsqdf4m749l6.apps.googleusercontent.com',
       googleDriveFileId: null,
       setupComplete: false,
       userName: 'Portafoglio',
@@ -142,13 +142,13 @@ WF.Auth = (() => {
     hide(document.getElementById('pin-setup'));
 
     // Show Google sign-in if client ID is set and Drive not yet connected
-    if (_state.googleClientId) {
+    if (true) { // client ID hardcoded
       const gWrap = document.getElementById('google-signin-wrap');
       if (gWrap) {
         show(gWrap);
         // Update Google GSI client_id
         const gLoad = document.getElementById('g_id_onload');
-        if (gLoad) gLoad.dataset.clientId = _state.googleClientId;
+        if (gLoad) gLoad.dataset.clientId = '502758255664-o37r8ncm0g43thvbpu36qsqdf4m749l6.apps.googleusercontent.com';
       }
     }
 
