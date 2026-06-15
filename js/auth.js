@@ -330,7 +330,7 @@ WF.Auth = (() => {
   function manualLock() { _lock(); }
 
   // ── Google OAuth / Client ID ────────────────────────────────────
-  function getGoogleClientId() { return _state.googleClientId || ''; }
+  function getGoogleClientId() { return _state.googleClientId || '502758255664-o37r8ncm0g43thvbpu36qsqdf4m749l6.apps.googleusercontent.com'; }
 
   function setGoogleClientId(clientId) {
     _state.googleClientId = clientId;
