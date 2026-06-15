@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 192">
+  <defs>
+    <linearGradient id="g" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#4F46E5"/>
+      <stop offset="60%" stop-color="#7C3AED"/>
+      <stop offset="100%" stop-color="#A855F7"/>
+    </linearGradient>
+  </defs>
+  <rect width="192" height="192" rx="44" fill="url(#g)"/>
+  <!-- Chart line icon -->
+  <polyline points="36,132 76,92 106,112 156,60"
+    fill="none" stroke="white" stroke-width="14"
+    stroke-linecap="round" stroke-linejoin="round"/>
+  <polyline points="134,60 156,60 156,82"
+    fill="none" stroke="white" stroke-width="14"
+    stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

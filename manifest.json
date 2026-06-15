@@ -1,0 +1,29 @@
+{
+  "name": "WealthFlow",
+  "short_name": "WealthFlow",
+  "description": "Gestione personale di portafoglio e conti correnti",
+  "start_url": "./",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "theme_color": "#3730A3",
+  "background_color": "#F1F3FB",
+  "lang": "it",
+  "categories": ["finance", "productivity"],
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ],
+  "screenshots": [],
+  "shortcuts": [
+    {
+      "name": "Dashboard",
+      "url": "./#dashboard",
+      "description": "Apri la dashboard"
+    },
+    {
+      "name": "Investimenti",
+      "url": "./#investments",
+      "description": "Apri il portafoglio"
+    }
+  ]
+}

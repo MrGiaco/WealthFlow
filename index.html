@@ -1,0 +1,1054 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no" />
+  <meta name="theme-color" content="#3730A3" />
+  <meta name="description" content="WealthFlow — Gestione personale di portafoglio e conti correnti" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="WealthFlow" />
+  <title>WealthFlow</title>
+  <link rel="manifest" href="manifest.json" />
+  <link rel="apple-touch-icon" href="icons/icon-192.png" />
+  <link rel="icon" href="icons/icon-192.png" />
+  <!-- CSS -->
+  <link rel="stylesheet" href="css/main.css" />
+  <link rel="stylesheet" href="css/mobile.css" />
+  <link rel="stylesheet" href="css/desktop.css" />
+  <!-- Lucide Icons (UMD) -->
+  <script src="https://cdn.jsdelivr.net/npm/lucide@0.395.0/dist/umd/lucide.min.js"></script>
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <!-- SheetJS (Excel/CSV import) -->
+  <script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js"></script>
+  <!-- Google OAuth -->
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+</head>
+<body>
+
+<!-- =====================================================
+  LOCK SCREEN
+  ===================================================== -->
+<div id="lock-screen">
+  <div class="lock-card">
+    <div class="lock-logo">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-3 3"/></svg>
+    </div>
+    <h1 class="lock-title">WealthFlow</h1>
+    <p class="lock-subtitle">Il tuo patrimonio, sempre sotto controllo</p>
+
+    <!-- PIN Input section -->
+    <div id="pin-section">
+      <div class="pin-display" id="pin-display">
+        <span class="pin-dot" data-index="0"></span>
+        <span class="pin-dot" data-index="1"></span>
+        <span class="pin-dot" data-index="2"></span>
+        <span class="pin-dot" data-index="3"></span>
+        <span class="pin-dot" data-index="4"></span>
+        <span class="pin-dot" data-index="5"></span>
+      </div>
+      <p class="pin-label" id="pin-label">Inserisci il PIN</p>
+      <div class="pin-keypad">
+        <button class="pin-key" data-digit="1">1</button>
+        <button class="pin-key" data-digit="2">2</button>
+        <button class="pin-key" data-digit="3">3</button>
+        <button class="pin-key" data-digit="4">4</button>
+        <button class="pin-key" data-digit="5">5</button>
+        <button class="pin-key" data-digit="6">6</button>
+        <button class="pin-key" data-digit="7">7</button>
+        <button class="pin-key" data-digit="8">8</button>
+        <button class="pin-key" data-digit="9">9</button>
+        <button class="pin-key pin-key--bio" id="bio-btn">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 10a2 2 0 0 0-2 2c0 1.02-.1 2.51-.26 4"/><path d="M14 13.12c0 2.38 0 6.38-1 8.88"/><path d="M17.29 21.02c.12-.6.43-2.3.5-3.02"/><path d="M2 12a10 10 0 0 1 18-6"/><path d="M2 16h.01"/><path d="M21.8 16c.2-2 .131-5.354 0-6"/><path d="M5 19.5C5.5 18 6 15 6 12a6 6 0 0 1 .34-2"/><path d="M8.65 22c.21-.66.45-1.32.57-2"/><path d="M9 6.8a6 6 0 0 1 9 5.2v2"/></svg>
+        </button>
+        <button class="pin-key" data-digit="0">0</button>
+        <button class="pin-key pin-key--del" id="pin-del">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 5a2 2 0 0 0-1.344.519l-6.328 5.74a1 1 0 0 0 0 1.481l6.328 5.741A2 2 0 0 0 10 19h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2z"/><path d="m12 9 6 6"/><path d="m18 9-6 6"/></svg>
+        </button>
+      </div>
+      <!-- Google sign-in (first time) -->
+      <div id="google-signin-wrap" class="hidden">
+        <p style="font-size:12px;color:var(--text-3);margin:var(--sp-4) 0 var(--sp-2);text-align:center;">oppure accedi con Google</p>
+        <div id="g_id_onload" data-client_id="" data-callback="handleGoogleSignIn" data-auto_select="false"></div>
+        <div class="g_id_signin" data-type="standard" data-size="large" data-theme="outline" data-text="signin_with" data-shape="rectangular" data-logo_alignment="left" data-width="290"></div>
+      </div>
+    </div>
+
+    <!-- PIN setup section (first run) -->
+    <div id="pin-setup" class="hidden">
+      <p style="font-size:13px;color:var(--text-2);margin-bottom:var(--sp-4);line-height:1.6;">
+        Scegli un PIN a 6 cifre per proteggere l'accesso a WealthFlow.
+      </p>
+      <div class="pin-display" id="pin-setup-display">
+        <span class="pin-dot"></span><span class="pin-dot"></span>
+        <span class="pin-dot"></span><span class="pin-dot"></span>
+        <span class="pin-dot"></span><span class="pin-dot"></span>
+      </div>
+      <p class="pin-label" id="pin-setup-label">Scegli un PIN a 6 cifre</p>
+      <div class="pin-keypad">
+        <button class="pin-key" data-setup-digit="1">1</button>
+        <button class="pin-key" data-setup-digit="2">2</button>
+        <button class="pin-key" data-setup-digit="3">3</button>
+        <button class="pin-key" data-setup-digit="4">4</button>
+        <button class="pin-key" data-setup-digit="5">5</button>
+        <button class="pin-key" data-setup-digit="6">6</button>
+        <button class="pin-key" data-setup-digit="7">7</button>
+        <button class="pin-key" data-setup-digit="8">8</button>
+        <button class="pin-key" data-setup-digit="9">9</button>
+        <button class="pin-key pin-key--empty"></button>
+        <button class="pin-key" data-setup-digit="0">0</button>
+        <button class="pin-key pin-key--del" id="pin-setup-del">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 5a2 2 0 0 0-1.344.519l-6.328 5.74a1 1 0 0 0 0 1.481l6.328 5.741A2 2 0 0 0 10 19h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2z"/><path d="m12 9 6 6"/><path d="m18 9-6 6"/></svg>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- =====================================================
+  MAIN APP
+  ===================================================== -->
+<div id="app" class="hidden">
+
+  <!-- ── Top bar (mobile) ──────────────────────────── -->
+  <header id="topbar">
+    <div class="topbar-brand">
+      <div class="topbar-logo">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-3 3"/></svg>
+      </div>
+      <span class="topbar-name">Wealth<span>Flow</span></span>
+    </div>
+    <div class="topbar-right">
+      <button class="topbar-btn" id="sync-btn" title="Sincronizza">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" id="sync-icon"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M3 21v-5h5"/></svg>
+      </button>
+      <button class="topbar-btn" id="refresh-quotes-btn-top" title="Aggiorna quotazioni">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v4"/><path d="m16.24 7.76 2.83-2.83"/><path d="M22 12h-4"/><path d="m16.24 16.24 2.83 2.83"/><path d="M12 22v-4"/><path d="m7.76 16.24-2.83 2.83"/><path d="M2 12h4"/><path d="m7.76 7.76-2.83-2.83"/></svg>
+      </button>
+    </div>
+  </header>
+
+  <!-- ── Desktop Sidebar ───────────────────────────── -->
+  <aside id="sidebar" class="hidden">
+    <div class="sidebar-brand">
+      <div class="sidebar-logo">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-3 3"/></svg>
+      </div>
+      <div>
+        <div class="sidebar-appname">Wealth<span>Flow</span></div>
+        <div style="font-size:10px;color:var(--text-3);margin-top:1px;">Personal Finance</div>
+      </div>
+    </div>
+
+    <nav class="sidebar-nav">
+      <div class="sidebar-nav-label">Menu</div>
+      <div class="sidebar-item active" data-nav="dashboard">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/><rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/></svg>
+        <span class="sidebar-item-label">Dashboard</span>
+      </div>
+      <div class="sidebar-item" data-nav="investments">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>
+        <span class="sidebar-item-label">Investimenti</span>
+      </div>
+      <div class="sidebar-item" data-nav="accounts">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2Z"/><path d="M13 5v2"/><path d="M13 17v2"/><path d="M13 11v2"/></svg>
+        <span class="sidebar-item-label">Conti</span>
+      </div>
+      <div class="sidebar-item" data-nav="transactions">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3 4 7l4 4"/><path d="M4 7h16"/><path d="m16 21 4-4-4-4"/><path d="M20 17H4"/></svg>
+        <span class="sidebar-item-label">Movimenti</span>
+      </div>
+
+      <div class="sidebar-nav-label" style="margin-top:var(--sp-4);">Altro</div>
+      <div class="sidebar-item" data-nav="settings">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
+        <span class="sidebar-item-label">Impostazioni</span>
+      </div>
+    </nav>
+
+    <div class="sidebar-footer">
+      <div class="sidebar-sync">
+        <span class="sync-dot" id="sidebar-sync-dot"></span>
+        <span id="sidebar-sync-text">Sincronizzato</span>
+        <button class="btn btn--icon btn--ghost" id="sidebar-sync-btn" style="margin-left:auto;width:28px;height:28px;" title="Sincronizza ora">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M3 21v-5h5"/></svg>
+        </button>
+      </div>
+      <div class="sidebar-user" id="sidebar-user">
+        <div class="sidebar-avatar" id="sidebar-avatar">W</div>
+        <div class="sidebar-user-info">
+          <div class="sidebar-user-name truncate" id="sidebar-user-name">Portafoglio</div>
+          <div class="sidebar-user-role">Personale</div>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ── Main Content ──────────────────────────────── -->
+  <main id="main-content">
+
+    <!-- ═════════════════════════════════════════
+      PAGE: DASHBOARD
+    ═════════════════════════════════════════ -->
+    <section id="page-dashboard" class="page active">
+      <!-- Hero patrimony card -->
+      <div class="hero-card dashboard-hero" id="dash-hero">
+        <div class="hero-label">PATRIMONIO TOTALE</div>
+        <div class="hero-value" id="dash-total">€ —</div>
+        <div id="dash-change-wrap">
+          <span class="hero-change flat" id="dash-change">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/></svg>
+            — oggi
+          </span>
+        </div>
+        <div class="hero-sub-row" style="margin-top:var(--sp-4);">
+          <div class="hero-sub-card">
+            <div class="hero-sub-label">Investimenti</div>
+            <div class="hero-sub-value" id="dash-inv-total">€ —</div>
+          </div>
+          <div class="hero-sub-card">
+            <div class="hero-sub-label">Liquidità</div>
+            <div class="hero-sub-value" id="dash-liq-total">€ —</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Desktop: 3-column stats row -->
+      <div class="dashboard-top-grid" id="dash-stats-grid" style="display:none;">
+        <div class="stat-card">
+          <div class="stat-icon stat-icon--violet"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg></div>
+          <div class="stat-label">Investimenti</div>
+          <div class="stat-value" id="stat-investments">€ —</div>
+          <div class="stat-change flat" id="stat-investments-change">—</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon stat-icon--teal"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="20" height="14" x="2" y="5" rx="2"/><line x1="2" x2="22" y1="10" y2="10"/></svg></div>
+          <div class="stat-label">Liquidità</div>
+          <div class="stat-value" id="stat-liquidity">€ —</div>
+          <div class="stat-change flat" id="stat-liquidity-change">—</div>
+        </div>
+      </div>
+
+      <!-- Quick stats row (mobile) -->
+      <div class="flex gap-3" id="dash-quick-stats">
+        <div class="stat-card" style="flex:1;">
+          <div class="stat-icon stat-icon--success" style="margin-bottom:var(--sp-2);width:32px;height:32px;">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>
+          </div>
+          <div class="stat-label">Guadagno</div>
+          <div class="stat-value" id="dash-gain" style="font-size:var(--text-md);">—</div>
+        </div>
+        <div class="stat-card" style="flex:1;">
+          <div class="stat-icon stat-icon--primary" style="margin-bottom:var(--sp-2);width:32px;height:32px;">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px"><path d="M12 22V12"/><path d="m17 7-5-5-5 5"/></svg>
+          </div>
+          <div class="stat-label">Rendimento</div>
+          <div class="stat-value" id="dash-yield" style="font-size:var(--text-md);">—%</div>
+        </div>
+        <div class="stat-card" style="flex:1;">
+          <div class="stat-icon stat-icon--warning" style="margin-bottom:var(--sp-2);width:32px;height:32px;">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+          </div>
+          <div class="stat-label">Aggiorn.</div>
+          <div class="stat-value" id="dash-updated" style="font-size:var(--text-md);">—</div>
+        </div>
+      </div>
+
+      <!-- Dashboard mid: charts -->
+      <div class="dashboard-mid-grid" id="dash-charts-grid">
+        <!-- Allocation chart -->
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">Allocazione</span>
+            <span class="badge badge--primary" id="dash-alloc-count">0 titoli</span>
+          </div>
+          <div class="card-body" style="display:flex;align-items:center;justify-content:center;min-height:160px;">
+            <canvas id="chart-allocation" style="max-width:180px;max-height:180px;"></canvas>
+          </div>
+        </div>
+        <!-- Performance chart -->
+        <div class="card" style="min-width:0;">
+          <div class="card-header">
+            <span class="card-title">Performance</span>
+          </div>
+          <div class="card-body" style="padding-left:0;padding-right:0;">
+            <canvas id="chart-performance" style="height:140px;"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <!-- Top investments preview -->
+      <div class="card dash-section">
+        <div class="section-header">
+          <span class="section-title">Investimenti</span>
+          <span class="section-action" data-nav="investments">Vedi tutti</span>
+        </div>
+        <div id="dash-investments-list">
+          <div class="empty-state" style="padding:var(--sp-8) var(--sp-4);">
+            <div class="empty-icon" style="width:48px;height:48px;"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:22px;height:22px;"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg></div>
+            <p class="empty-title" style="font-size:var(--text-sm);">Nessun investimento</p>
+            <p class="empty-desc" style="font-size:var(--text-xs);margin-bottom:var(--sp-3);">Aggiungi il tuo primo titolo dalla sezione Investimenti.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Recent transactions -->
+      <div class="card dash-section">
+        <div class="section-header">
+          <span class="section-title">Movimenti Recenti</span>
+          <span class="section-action" data-nav="transactions">Vedi tutti</span>
+        </div>
+        <div id="dash-transactions-list">
+          <div class="empty-state" style="padding:var(--sp-8) var(--sp-4);">
+            <div class="empty-icon" style="width:48px;height:48px;"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:22px;height:22px;"><path d="M8 3 4 7l4 4"/><path d="M4 7h16"/><path d="m16 21 4-4-4-4"/><path d="M20 17H4"/></svg></div>
+            <p class="empty-title" style="font-size:var(--text-sm);">Nessun movimento</p>
+            <p class="empty-desc" style="font-size:var(--text-xs);margin-bottom:0;">Aggiungi movimenti dalla sezione Movimenti.</p>
+          </div>
+        </div>
+      </div>
+    </section><!-- /dashboard -->
+
+    <!-- ═════════════════════════════════════════
+      PAGE: INVESTMENTS
+    ═════════════════════════════════════════ -->
+    <section id="page-investments" class="page">
+      <!-- Toolbar -->
+      <div class="investments-toolbar card" style="border-radius:0;border-left:none;border-right:none;border-top:none;">
+        <div>
+          <div class="investments-total" id="inv-total-value">€ —</div>
+          <div class="investments-sub" id="inv-total-gain">— guadagno totale</div>
+        </div>
+        <div class="flex gap-2">
+          <button class="btn btn--icon btn--secondary" id="refresh-quotes-btn" title="Aggiorna quotazioni">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M3 21v-5h5"/></svg>
+          </button>
+          <button class="btn btn--primary btn--sm" id="add-security-btn">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
+            Aggiungi
+          </button>
+        </div>
+      </div>
+
+      <!-- Category filter -->
+      <div style="padding:var(--sp-3) var(--sp-4);">
+        <div class="category-pills" id="inv-category-pills">
+          <button class="pill active" data-category="all">Tutti</button>
+          <button class="pill" data-category="azione">Azioni</button>
+          <button class="pill" data-category="etf">ETF</button>
+          <button class="pill" data-category="fondo">Fondi</button>
+          <button class="pill" data-category="obbligazione">Obbligazioni</button>
+          <button class="pill" data-category="certificate">Certificates</button>
+          <button class="pill" data-category="altro">Altro</button>
+        </div>
+      </div>
+
+      <!-- Desktop: two-column layout; Mobile: full list -->
+      <div class="investments-desktop-layout" id="inv-layout">
+        <!-- List column -->
+        <div class="investments-list-col">
+          <div class="card" style="border-radius:0;border:none;box-shadow:none;">
+            <div id="investments-list">
+              <!-- Populated by JS -->
+              <div class="empty-state" id="inv-empty">
+                <div class="empty-icon">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>
+                </div>
+                <h3 class="empty-title">Nessun titolo</h3>
+                <p class="empty-desc">Aggiungi azioni, ETF, fondi o obbligazioni al tuo portafoglio.</p>
+                <button class="btn btn--primary" id="add-security-btn-empty">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
+                  Aggiungi titolo
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- Detail column (desktop only) -->
+        <div class="investments-detail-col" id="inv-detail-col">
+          <div class="empty-state">
+            <div class="empty-icon">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/></svg>
+            </div>
+            <h3 class="empty-title">Seleziona un titolo</h3>
+            <p class="empty-desc">Clicca su un titolo per vedere i dettagli.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- FAB (mobile) -->
+      <button class="fab" id="add-security-fab" title="Aggiungi titolo">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
+      </button>
+    </section><!-- /investments -->
+
+    <!-- ═════════════════════════════════════════
+      PAGE: ACCOUNTS
+    ═════════════════════════════════════════ -->
+    <section id="page-accounts" class="page">
+      <!-- Header -->
+      <div class="flex items-center justify-between" style="padding:var(--sp-4);flex-shrink:0;">
+        <div>
+          <div style="font-family:var(--font-head);font-size:var(--text-xl);font-weight:800;" id="accounts-total-label">Liquidità totale</div>
+          <div style="font-family:var(--font-head);font-size:var(--text-2xl);font-weight:800;color:var(--primary);margin-top:4px;" id="accounts-total-value">€ —</div>
+        </div>
+        <button class="btn btn--primary btn--sm" id="add-account-btn">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
+          Nuovo conto
+        </button>
+      </div>
+
+      <!-- Accounts grid -->
+      <div class="accounts-grid" id="accounts-grid">
+        <div class="empty-state" id="accounts-empty">
+          <div class="empty-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2Z"/><path d="M13 5v2"/><path d="M13 17v2"/><path d="M13 11v2"/></svg>
+          </div>
+          <h3 class="empty-title">Nessun conto</h3>
+          <p class="empty-desc">Aggiungi i tuoi conti bancari per monitorare la liquidità.</p>
+          <button class="btn btn--primary" id="add-account-btn-empty">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
+            Aggiungi conto
+          </button>
+        </div>
+      </div>
+    </section><!-- /accounts -->
+
+    <!-- ═════════════════════════════════════════
+      PAGE: TRANSACTIONS
+    ═════════════════════════════════════════ -->
+    <section id="page-transactions" class="page">
+      <div class="tx-desktop-layout" style="height:100%;">
+
+        <!-- Desktop: accounts sidebar -->
+        <div class="tx-accounts-panel" id="tx-accounts-panel" style="display:none;">
+          <div class="tx-accounts-panel-title">Conti</div>
+          <div class="tx-account-nav-item active" data-account-nav="all">
+            <span class="tx-account-nav-dot" style="background:var(--primary);"></span>
+            <span class="tx-account-nav-name">Tutti i conti</span>
+            <span class="tx-account-nav-balance" id="tx-panel-total">€ —</span>
+          </div>
+          <div id="tx-accounts-nav-list"><!-- populated by JS --></div>
+        </div>
+
+        <!-- Main transactions column -->
+        <div class="tx-main-col" style="flex:1;min-width:0;overflow:hidden;">
+          <!-- Toolbar -->
+          <div class="tx-toolbar">
+            <div class="tx-search-wrap">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+              <input type="search" class="tx-search" id="tx-search" placeholder="Cerca movimenti…">
+            </div>
+            <button class="tx-filter-btn" id="tx-filter-btn" title="Filtri">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+            </button>
+            <button class="btn btn--primary btn--sm" id="add-transaction-btn">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
+              <span class="hidden" id="add-tx-label">Aggiungi</span>
+            </button>
+            <button class="btn btn--secondary btn--sm" id="import-transactions-btn" title="Importa CSV/Excel">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v12"/><path d="m8 10 4 4 4-4"/><path d="M20 17v1a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-1"/></svg>
+            </button>
+          </div>
+
+          <!-- Filter chips -->
+          <div class="filter-chips-row" id="tx-filter-chips" style="display:none;">
+            <button class="pill active" data-tx-type="all">Tutti</button>
+            <button class="pill" data-tx-type="income">Entrate</button>
+            <button class="pill" data-tx-type="expense">Uscite</button>
+            <button class="pill" data-tx-type="transfer">Trasferimenti</button>
+            <button class="pill" data-tx-type="buy">Acquisti titoli</button>
+            <button class="pill" data-tx-type="sell">Vendite titoli</button>
+          </div>
+
+          <!-- Account strip (mobile) -->
+          <div class="account-strip" id="tx-account-strip">
+            <div class="account-chip active" data-account-filter="all">
+              <div class="account-chip-name">Tutti</div>
+              <div class="account-chip-balance" id="tx-strip-total">€ —</div>
+            </div>
+            <!-- populated by JS -->
+          </div>
+
+          <!-- Transactions list -->
+          <div class="tx-list" id="tx-list">
+            <div class="empty-state" id="tx-empty">
+              <div class="empty-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 3 4 7l4 4"/><path d="M4 7h16"/><path d="m16 21 4-4-4-4"/><path d="M20 17H4"/></svg>
+              </div>
+              <h3 class="empty-title">Nessun movimento</h3>
+              <p class="empty-desc">Aggiungi movimenti manualmente o importa un file Excel/CSV dalla tua banca.</p>
+              <div class="flex gap-3" style="justify-content:center;">
+                <button class="btn btn--primary" id="add-transaction-btn-empty">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
+                  Aggiungi
+                </button>
+                <button class="btn btn--secondary" id="import-btn-empty">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v12"/><path d="m8 10 4 4 4-4"/><path d="M20 17v1a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-1"/></svg>
+                  Importa
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- FAB (mobile) -->
+      <button class="fab" id="add-tx-fab">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
+      </button>
+    </section><!-- /transactions -->
+
+    <!-- ═════════════════════════════════════════
+      PAGE: SETTINGS
+    ═════════════════════════════════════════ -->
+    <section id="page-settings" class="page">
+      <div class="settings-section" style="padding-top:var(--sp-5);">
+
+        <div class="settings-section-label">Integrazione</div>
+        <div class="settings-group">
+          <div class="settings-item" id="settings-worker-url">
+            <div class="settings-item-icon" style="background:var(--primary-light);color:var(--primary);">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg>
+            </div>
+            <div class="settings-item-text">
+              <div class="settings-item-title">Cloudflare Worker URL</div>
+              <div class="settings-item-desc" id="settings-worker-val">Non configurato</div>
+            </div>
+            <div class="settings-item-right"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg></div>
+          </div>
+          <div class="settings-item" id="settings-google-drive">
+            <div class="settings-item-icon" style="background:#ECFDF5;color:#059669;">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/><path d="M12 18v-6"/><path d="m9 15 3 3 3-3"/></svg>
+            </div>
+            <div class="settings-item-text">
+              <div class="settings-item-title">Google Drive</div>
+              <div class="settings-item-desc" id="settings-drive-val">Non connesso</div>
+            </div>
+            <div class="settings-item-right"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg></div>
+          </div>
+          <div class="settings-item" id="settings-google-client-id">
+            <div class="settings-item-icon" style="background:#FFF7ED;color:#C2410C;">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M10 9H8"/><path d="M16 13H8"/><path d="M16 17H8"/></svg>
+            </div>
+            <div class="settings-item-text">
+              <div class="settings-item-title">Google Client ID</div>
+              <div class="settings-item-desc" id="settings-client-id-val">Non configurato</div>
+            </div>
+            <div class="settings-item-right"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg></div>
+          </div>
+        </div>
+
+        <div class="settings-section-label">Sicurezza</div>
+        <div class="settings-group">
+          <div class="settings-item" id="settings-change-pin">
+            <div class="settings-item-icon" style="background:var(--violet-light);color:var(--violet);">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+            </div>
+            <div class="settings-item-text">
+              <div class="settings-item-title">Cambia PIN</div>
+              <div class="settings-item-desc">Modifica il codice di accesso</div>
+            </div>
+            <div class="settings-item-right"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg></div>
+          </div>
+          <div class="settings-item" id="settings-biometric-toggle">
+            <div class="settings-item-icon" style="background:#F0FDF4;color:#16A34A;">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 10a2 2 0 0 0-2 2c0 1.02-.1 2.51-.26 4"/><path d="M14 13.12c0 2.38 0 6.38-1 8.88"/><path d="M17.29 21.02c.12-.6.43-2.3.5-3.02"/><path d="M2 12a10 10 0 0 1 18-6"/><path d="M2 16h.01"/><path d="M21.8 16c.2-2 .131-5.354 0-6"/><path d="M5 19.5C5.5 18 6 15 6 12a6 6 0 0 1 .34-2"/><path d="M8.65 22c.21-.66.45-1.32.57-2"/><path d="M9 6.8a6 6 0 0 1 9 5.2v2"/></svg>
+            </div>
+            <div class="settings-item-text">
+              <div class="settings-item-title">Accesso biometrico</div>
+              <div class="settings-item-desc">Impronta / Face ID</div>
+            </div>
+            <div class="toggle" id="biometric-toggle"></div>
+          </div>
+        </div>
+
+        <div class="settings-section-label">Dati</div>
+        <div class="settings-group">
+          <div class="settings-item" id="settings-export-backup">
+            <div class="settings-item-icon" style="background:var(--teal-light);color:var(--teal);">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v12"/><path d="m8 10 4 4 4-4"/><path d="M20 17v1a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-1"/></svg>
+            </div>
+            <div class="settings-item-text">
+              <div class="settings-item-title">Esporta backup (JSON)</div>
+              <div class="settings-item-desc">Scarica una copia locale dei dati</div>
+            </div>
+            <div class="settings-item-right"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg></div>
+          </div>
+          <div class="settings-item" id="settings-import-backup">
+            <div class="settings-item-icon" style="background:var(--warning-light);color:var(--warning);">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 16V4"/><path d="m8 8 4-4 4 4"/><path d="M20 17v1a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-1"/></svg>
+            </div>
+            <div class="settings-item-text">
+              <div class="settings-item-title">Ripristina backup</div>
+              <div class="settings-item-desc">Carica da file JSON</div>
+            </div>
+            <div class="settings-item-right"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg></div>
+          </div>
+          <div class="settings-item" id="settings-clear-data" style="color:var(--danger);">
+            <div class="settings-item-icon" style="background:var(--danger-light);color:var(--danger);">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></svg>
+            </div>
+            <div class="settings-item-text">
+              <div class="settings-item-title" style="color:var(--danger);">Cancella tutti i dati</div>
+              <div class="settings-item-desc">Elimina tutto e riparte da zero</div>
+            </div>
+            <div class="settings-item-right"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--danger);"><path d="m9 18 6-6-6-6"/></svg></div>
+          </div>
+        </div>
+
+        <div class="settings-section-label">Quotazioni</div>
+        <div class="settings-group">
+          <div class="settings-item" id="settings-refresh-quotes">
+            <div class="settings-item-icon" style="background:var(--primary-light);color:var(--primary);">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M3 21v-5h5"/></svg>
+            </div>
+            <div class="settings-item-text">
+              <div class="settings-item-title">Aggiorna Quotazioni Ora</div>
+              <div class="settings-item-desc" id="settings-last-update">Ultimo aggiornamento: mai</div>
+            </div>
+          </div>
+          <div class="settings-item">
+            <div class="settings-item-icon" style="background:var(--primary-light);color:var(--primary);">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            </div>
+            <div class="settings-item-text">
+              <div class="settings-item-title">Auto-aggiornamento</div>
+              <div class="settings-item-desc">Ogni 5 minuti durante l'utilizzo</div>
+            </div>
+            <div class="toggle on" id="auto-refresh-toggle"></div>
+          </div>
+        </div>
+
+        <div class="settings-app-info">
+          <strong>WealthFlow</strong> v1.0.0<br>
+          Dati cifrati con AES-256-GCM · Archiviati su Google Drive<br>
+          <span style="font-size:10px;margin-top:4px;display:block;">Sviluppato con Claude (Anthropic) · Uso personale privato</span>
+        </div>
+      </div>
+    </section><!-- /settings -->
+
+  </main><!-- /main-content -->
+
+  <!-- ── Bottom Navigation (mobile) ────────────── -->
+  <nav id="bottom-nav">
+    <div class="nav-item active" data-nav="dashboard">
+      <div class="nav-item-icon">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/><rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/></svg>
+      </div>
+      <span class="nav-item-label">Dashboard</span>
+    </div>
+    <div class="nav-item" data-nav="investments">
+      <div class="nav-item-icon">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>
+      </div>
+      <span class="nav-item-label">Titoli</span>
+    </div>
+    <div class="nav-item" data-nav="accounts">
+      <div class="nav-item-icon">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2Z"/></svg>
+      </div>
+      <span class="nav-item-label">Conti</span>
+    </div>
+    <div class="nav-item" data-nav="transactions">
+      <div class="nav-item-icon">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3 4 7l4 4"/><path d="M4 7h16"/><path d="m16 21 4-4-4-4"/><path d="M20 17H4"/></svg>
+      </div>
+      <span class="nav-item-label">Movimenti</span>
+    </div>
+    <div class="nav-item" data-nav="settings">
+      <div class="nav-item-icon">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
+      </div>
+      <span class="nav-item-label">Impostazioni</span>
+    </div>
+  </nav>
+
+</div><!-- /app -->
+
+<!-- =====================================================
+  MODALS
+  ===================================================== -->
+
+<!-- Modal: Add/Edit Account -->
+<div class="modal-overlay hidden" id="modal-account">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-title-bar">
+      <h2 class="modal-title" id="modal-account-title">Nuovo Conto</h2>
+      <button class="btn btn--icon btn--ghost modal-close" data-modal="modal-account">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="account-edit-id">
+      <div class="input-row">
+        <div class="input-group" style="grid-column:span 2;">
+          <label class="input-label">Nome conto</label>
+          <input type="text" class="input" id="account-name" placeholder="es. Fineco Personale">
+        </div>
+      </div>
+      <div class="input-row">
+        <div class="input-group">
+          <label class="input-label">Banca</label>
+          <select class="input" id="account-bank">
+            <option value="fineco">Fineco Bank</option>
+            <option value="isp">Intesa Sanpaolo</option>
+            <option value="ing">ING</option>
+            <option value="mediolanum">Banca Mediolanum</option>
+            <option value="unicredit">UniCredit</option>
+            <option value="poste">Poste Italiane</option>
+            <option value="bnl">BNL</option>
+            <option value="altro">Altro</option>
+          </select>
+        </div>
+        <div class="input-group">
+          <label class="input-label">Tipo</label>
+          <select class="input" id="account-type">
+            <option value="personal">Personale</option>
+            <option value="investment">Investimento</option>
+            <option value="shared">Condiviso</option>
+            <option value="savings">Risparmio</option>
+          </select>
+        </div>
+      </div>
+      <div class="input-group">
+        <label class="input-label">Saldo iniziale (€)</label>
+        <div class="input-wrap">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M16 8h-6a2 2 0 1 0 0 4h4a2 2 0 1 1 0 4H8"/><path d="M12 18V6"/></svg>
+          <input type="number" class="input input--icon" id="account-balance" placeholder="0.00" step="0.01">
+        </div>
+        <span class="input-hint">Il saldo verrà aggiornato automaticamente dai movimenti.</span>
+      </div>
+      <div class="input-group">
+        <label class="input-label">Colore</label>
+        <div class="color-swatches" id="account-color-swatches">
+          <div class="color-swatch active" data-color="#4F46E5" style="background:#4F46E5;"></div>
+          <div class="color-swatch" data-color="#7C3AED" style="background:#7C3AED;"></div>
+          <div class="color-swatch" data-color="#0D9488" style="background:#0D9488;"></div>
+          <div class="color-swatch" data-color="#059669" style="background:#059669;"></div>
+          <div class="color-swatch" data-color="#D97706" style="background:#D97706;"></div>
+          <div class="color-swatch" data-color="#DC2626" style="background:#DC2626;"></div>
+          <div class="color-swatch" data-color="#0891B2" style="background:#0891B2;"></div>
+          <div class="color-swatch" data-color="#DB2777" style="background:#DB2777;"></div>
+        </div>
+        <input type="hidden" id="account-color" value="#4F46E5">
+      </div>
+      <div class="input-group">
+        <label class="input-label">Note (opzionale)</label>
+        <textarea class="input" id="account-notes" rows="2" placeholder="Descrizione, IBAN, ecc."></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn--ghost flex-1 modal-close" data-modal="modal-account">Annulla</button>
+      <button class="btn btn--primary flex-1" id="save-account-btn">Salva</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Add/Edit Security (Titolo) -->
+<div class="modal-overlay hidden" id="modal-security">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-title-bar">
+      <h2 class="modal-title" id="modal-security-title">Nuovo Titolo</h2>
+      <button class="btn btn--icon btn--ghost modal-close" data-modal="modal-security">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="security-edit-id">
+      <div class="input-row">
+        <div class="input-group" style="grid-column:span 2;">
+          <label class="input-label">Nome titolo</label>
+          <input type="text" class="input" id="security-name" placeholder="es. ENI SpA, Vanguard FTSE…">
+        </div>
+      </div>
+      <div class="input-row">
+        <div class="input-group">
+          <label class="input-label">Ticker / Simbolo</label>
+          <input type="text" class="input" id="security-ticker" placeholder="es. ENI.MI, VEUR.AS">
+          <span class="input-hint">Yahoo Finance ticker. Per certificates: ID numerico ZoneBourse.</span>
+        </div>
+        <div class="input-group">
+          <label class="input-label">Categoria</label>
+          <select class="input" id="security-category">
+            <option value="azione">Azione</option>
+            <option value="etf">ETF</option>
+            <option value="fondo">Fondo</option>
+            <option value="obbligazione">Obbligazione</option>
+            <option value="certificate">Certificate</option>
+            <option value="altro">Altro</option>
+          </select>
+        </div>
+      </div>
+      <div class="input-row">
+        <div class="input-group">
+          <label class="input-label">ISIN (opzionale)</label>
+          <input type="text" class="input" id="security-isin" placeholder="IT0003132476">
+        </div>
+        <div class="input-group">
+          <label class="input-label">Conto di riferimento</label>
+          <select class="input" id="security-account">
+            <option value="">— Seleziona conto —</option>
+          </select>
+        </div>
+      </div>
+      <div class="input-row">
+        <div class="input-group">
+          <label class="input-label">Quantità posseduta</label>
+          <input type="number" class="input" id="security-quantity" placeholder="0" step="0.0001" min="0">
+        </div>
+        <div class="input-group">
+          <label class="input-label">PMC — Prezzo Medio di Carico (€)</label>
+          <div class="input-wrap">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M16 8h-6a2 2 0 1 0 0 4h4a2 2 0 1 1 0 4H8"/><path d="M12 18V6"/></svg>
+            <input type="number" class="input input--icon" id="security-avg-cost" placeholder="0.0000" step="0.0001" min="0">
+          </div>
+        </div>
+      </div>
+      <!-- Calculated totals preview -->
+      <div style="background:var(--primary-light);border-radius:var(--radius);padding:var(--sp-3) var(--sp-4);margin-bottom:var(--sp-4);">
+        <div class="flex justify-between" style="font-size:var(--text-xs);color:var(--primary);">
+          <span>Costo totale carico:</span>
+          <strong id="security-calc-total">€ 0.00</strong>
+        </div>
+      </div>
+      <div class="input-group">
+        <label class="input-label">Valuta</label>
+        <select class="input" id="security-currency">
+          <option value="EUR">EUR — Euro</option>
+          <option value="USD">USD — Dollaro</option>
+          <option value="GBP">GBP — Sterlina</option>
+          <option value="CHF">CHF — Franco Svizzero</option>
+        </select>
+      </div>
+      <div class="input-group">
+        <label class="input-label">Note (opzionale)</label>
+        <textarea class="input" id="security-notes" rows="2" placeholder="Strategia, obiettivo, ecc."></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn--ghost flex-1 modal-close" data-modal="modal-security">Annulla</button>
+      <button class="btn btn--primary flex-1" id="save-security-btn">Salva</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Add/Edit Transaction -->
+<div class="modal-overlay hidden" id="modal-transaction">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-title-bar">
+      <h2 class="modal-title" id="modal-tx-title">Nuovo Movimento</h2>
+      <button class="btn btn--icon btn--ghost modal-close" data-modal="modal-transaction">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="tx-edit-id">
+      <!-- Type selector -->
+      <div class="input-group">
+        <label class="input-label">Tipo movimento</label>
+        <div class="flex gap-2" id="tx-type-tabs" style="flex-wrap:wrap;">
+          <button class="pill active" data-tx-type-select="income">↓ Entrata</button>
+          <button class="pill" data-tx-type-select="expense">↑ Uscita</button>
+          <button class="pill" data-tx-type-select="transfer">⇄ Trasferimento</button>
+          <button class="pill" data-tx-type-select="buy">▲ Acquisto titolo</button>
+          <button class="pill" data-tx-type-select="sell">▼ Vendita titolo</button>
+        </div>
+        <input type="hidden" id="tx-type" value="income">
+      </div>
+
+      <div class="input-group">
+        <label class="input-label">Descrizione</label>
+        <input type="text" class="input" id="tx-description" placeholder="es. Stipendio, Affitto, Spesa…">
+      </div>
+      <div class="input-row">
+        <div class="input-group">
+          <label class="input-label">Importo (€)</label>
+          <div class="input-wrap">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M16 8h-6a2 2 0 1 0 0 4h4a2 2 0 1 1 0 4H8"/><path d="M12 18V6"/></svg>
+            <input type="number" class="input input--icon" id="tx-amount" placeholder="0.00" step="0.01" min="0">
+          </div>
+        </div>
+        <div class="input-group">
+          <label class="input-label">Data</label>
+          <input type="date" class="input" id="tx-date">
+        </div>
+      </div>
+      <div class="input-group">
+        <label class="input-label">Conto</label>
+        <select class="input" id="tx-account">
+          <option value="">— Seleziona conto —</option>
+        </select>
+      </div>
+      <div class="input-group" id="tx-to-account-group" style="display:none;">
+        <label class="input-label">Conto di destinazione</label>
+        <select class="input" id="tx-to-account">
+          <option value="">— Seleziona conto —</option>
+        </select>
+      </div>
+      <div class="input-group">
+        <label class="input-label">Categoria</label>
+        <select class="input" id="tx-category">
+          <optgroup label="Entrate">
+            <option value="stipendio">💼 Stipendio</option>
+            <option value="dividendo">📈 Dividendo</option>
+            <option value="rimborso">↩ Rimborso</option>
+            <option value="regalo">🎁 Regalo ricevuto</option>
+            <option value="altro_entrata">+ Altro (entrata)</option>
+          </optgroup>
+          <optgroup label="Uscite">
+            <option value="affitto">🏠 Affitto/Mutuo</option>
+            <option value="spesa">🛒 Spesa alimentare</option>
+            <option value="ristorante">🍽 Ristorante/Bar</option>
+            <option value="trasporto">🚗 Trasporto</option>
+            <option value="utenze">💡 Utenze</option>
+            <option value="salute">❤ Salute/Farmacia</option>
+            <option value="abbonamenti">📱 Abbonamenti</option>
+            <option value="istruzione">📚 Istruzione</option>
+            <option value="viaggi">✈ Viaggi/Vacanze</option>
+            <option value="shopping">🛍 Shopping</option>
+            <option value="tasse">📋 Tasse/Imposte</option>
+            <option value="altro_uscita">+ Altro (uscita)</option>
+          </optgroup>
+          <optgroup label="Investimenti">
+            <option value="acquisto_titolo">▲ Acquisto titolo</option>
+            <option value="vendita_titolo">▼ Vendita titolo</option>
+            <option value="commissioni">⚙ Commissioni</option>
+          </optgroup>
+        </select>
+      </div>
+      <div class="input-group">
+        <label class="input-label">Note (opzionale)</label>
+        <textarea class="input" id="tx-notes" rows="2" placeholder="Dettagli aggiuntivi…"></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn--ghost flex-1 modal-close" data-modal="modal-transaction">Annulla</button>
+      <button class="btn btn--primary flex-1" id="save-transaction-btn">Salva</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Import CSV/Excel -->
+<div class="modal-overlay hidden" id="modal-import">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-title-bar">
+      <h2 class="modal-title">Importa Movimenti</h2>
+      <button class="btn btn--icon btn--ghost modal-close" data-modal="modal-import">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <div class="input-group">
+        <label class="input-label">Conto di destinazione</label>
+        <select class="input" id="import-account">
+          <option value="">— Seleziona conto —</option>
+        </select>
+      </div>
+      <!-- Drop zone -->
+      <div class="drop-zone" id="import-dropzone">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 16V4"/><path d="m8 8 4-4 4 4"/><path d="M20 17v1a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-1"/></svg>
+        <p><strong>Trascina qui</strong> il file Excel o CSV<br>oppure <strong>clicca per selezionare</strong></p>
+        <p style="font-size:11px;color:var(--text-3);margin-top:8px;">Supporta: .xlsx, .xls, .csv</p>
+        <input type="file" id="import-file-input" accept=".xlsx,.xls,.csv" style="display:none;">
+      </div>
+
+      <!-- Column mapping -->
+      <div id="import-mapping-section" style="display:none;">
+        <div class="divider"></div>
+        <p style="font-size:var(--text-sm);font-weight:600;margin-bottom:var(--sp-3);">Mappa le colonne del file</p>
+        <div class="input-row" style="grid-template-columns:1fr 1fr;">
+          <div class="input-group">
+            <label class="input-label">Data</label>
+            <select class="input" id="map-date"><option value="">— colonna —</option></select>
+          </div>
+          <div class="input-group">
+            <label class="input-label">Descrizione</label>
+            <select class="input" id="map-desc"><option value="">— colonna —</option></select>
+          </div>
+          <div class="input-group">
+            <label class="input-label">Importo</label>
+            <select class="input" id="map-amount"><option value="">— colonna —</option></select>
+          </div>
+          <div class="input-group">
+            <label class="input-label">Categoria (opz.)</label>
+            <select class="input" id="map-category"><option value="">— nessuna —</option></select>
+          </div>
+        </div>
+
+        <!-- Preview -->
+        <p style="font-size:var(--text-xs);color:var(--text-3);margin-bottom:var(--sp-2);">Anteprima (prime 5 righe)</p>
+        <div class="import-preview" id="import-preview"></div>
+        <p style="font-size:var(--text-xs);color:var(--text-2);margin-top:var(--sp-2);" id="import-count"></p>
+      </div>
+    </div>
+    <div class="modal-footer" id="import-footer" style="display:none;">
+      <button class="btn btn--ghost flex-1 modal-close" data-modal="modal-import">Annulla</button>
+      <button class="btn btn--primary flex-1" id="confirm-import-btn">Importa</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Security Detail -->
+<div class="modal-overlay hidden" id="modal-security-detail">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div id="security-detail-content"><!-- populated by JS --></div>
+  </div>
+</div>
+
+<!-- Modal: Generic Text Input (settings) -->
+<div class="modal-overlay hidden" id="modal-text-input">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-title-bar">
+      <h2 class="modal-title" id="modal-text-title">Modifica</h2>
+      <button class="btn btn--icon btn--ghost modal-close" data-modal="modal-text-input">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <div class="input-group">
+        <label class="input-label" id="modal-text-label">Valore</label>
+        <input type="text" class="input" id="modal-text-value" placeholder="">
+        <span class="input-hint" id="modal-text-hint"></span>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn--ghost flex-1 modal-close" data-modal="modal-text-input">Annulla</button>
+      <button class="btn btn--primary flex-1" id="save-text-input-btn">Salva</button>
+    </div>
+  </div>
+</div>
+
+<!-- =====================================================
+  TOAST CONTAINER
+  ===================================================== -->
+<div id="toast-container"></div>
+
+<!-- =====================================================
+  JS MODULES
+  ===================================================== -->
+<script src="js/utils.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/drive.js"></script>
+<script src="js/quotes.js"></script>
+<script src="js/portfolio.js"></script>
+<script src="js/transactions.js"></script>
+<script src="js/charts.js"></script>
+<script src="js/app.js"></script>
+<script>
+  // Register Service Worker
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('sw.js').catch(e => console.log('SW error:', e));
+    });
+  }
+</script>
+</body>
+</html>
